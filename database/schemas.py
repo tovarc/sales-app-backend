@@ -9,6 +9,7 @@ class Product(BaseModel):
     price: int
     sku: str
     stock: int
+    active: bool
 
     class Config:
         orm_mode = True

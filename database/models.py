@@ -1,5 +1,5 @@
-from sqlalchemy import Column, DateTime, Integer, String
-from sqlalchemy.sql import func
+from sqlalchemy import Column, DateTime, Integer, String, Boolean
+from sqlalchemy.sql import func, true
 
 from .db import Base
 
@@ -13,6 +13,7 @@ class Products(Base):
     price = Column(Integer)
     sku = Column(String(length=10), unique=True)
     stock = Column(Integer)
+    active = Column(Boolean, server_default=true(), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 

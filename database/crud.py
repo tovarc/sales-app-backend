@@ -6,7 +6,7 @@ from utils import utils
 
 def get_all_products(db: Session):
 
-    return db.query(models.Products).all()
+    return db.query(models.Products).order_by(models.Products.name).all()
 
 
 def get_simple_products(product_id: int, db: Session):
@@ -37,11 +37,15 @@ def update_product(product: schemas.Product, db: Session):
                 "name": product.name,
                 "price": product.price,
                 "stock": product.stock,
-            }
+            },
+            synchronize_session=False,
         )
     )
 
     if updated_product > 0:
+
+        db.commit()
+        db.flush()
 
         product = (
             db.query(models.Products).filter(models.Products.id == product.id).first()
