@@ -1,5 +1,6 @@
-from sqlalchemy import Column, DateTime, Integer, String, Boolean
+from sqlalchemy import Column, DateTime, Integer, String, Boolean, ForeignKey
 from sqlalchemy.sql import func, true
+from sqlalchemy.orm import relationship
 
 from .db import Base
 
@@ -43,7 +44,7 @@ class Clients(Base):
     state = Column(String)
     country = Column(String)
     phone = Column(String)
-    email = Column(String)
+    email = Column(String, unique=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
@@ -57,6 +58,9 @@ class Sales(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
+    client_id = Column(Integer, ForeignKey("clients.id"))
+    client = relationship("Clients")
+
 
 class SalesItems(Base):
 
@@ -67,3 +71,6 @@ class SalesItems(Base):
     quantity = Column(Integer)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    sale_id = Column(Integer, ForeignKey("sales.id"))
+    sale = relationship("Sales")

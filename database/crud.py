@@ -27,6 +27,19 @@ def create_product(product: schemas.Product, db: Session):
     return product
 
 
+def delete_product(product_id: int, db: Session):
+
+    product = (
+        db.query(models.Products)
+        .filter(models.Products.id == product_id)
+        .delete(synchronize_session="evaluate")
+    )
+
+    db.commit()
+
+    return product
+
+
 def update_product(product: schemas.Product, db: Session):
 
     updated_product = (
@@ -49,6 +62,39 @@ def update_product(product: schemas.Product, db: Session):
 
         product = (
             db.query(models.Products).filter(models.Products.id == product.id).first()
+        )
+
+        return product
+
+    else:
+
+        raise HTTPException(
+            status_code=409, detail=f"Product with ID: {product.id} doesn't exist."
+        )
+
+
+def update_status_product(product_id: int, status: bool, db: Session):
+
+    print(product_id, status)
+
+    db_product = (
+        db.query(models.Products)
+        .filter(models.Products.id == product_id)
+        .update(
+            {
+                "active": status,
+            },
+            synchronize_session=False,
+        )
+    )
+
+    if db_product > 0:
+
+        db.commit()
+        db.flush()
+
+        product = (
+            db.query(models.Products).filter(models.Products.id == product_id).first()
         )
 
         return product

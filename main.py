@@ -81,6 +81,33 @@ def update_products(
     return updated_product
 
 
+# Update product
+@app.put("/product-status/{product_id}", response_model=schemas.Product)
+def update_stauts_product(
+    product_id: int,
+    status: bool,
+    user: schemas.User = Depends(utils.get_current_user),
+    db: Session = Depends(get_db),
+):
+
+    updated_product = crud.update_status_product(product_id, status, db)
+
+    return updated_product
+
+
+# Get simple product
+@app.delete("/products/{product_id}")
+def delete_product(
+    product_id: int,
+    user: schemas.User = Depends(utils.get_current_user),
+    db: Session = Depends(get_db),
+):
+
+    product = crud.delete_product(product_id, db)
+
+    return product
+
+
 # Create user
 @app.post("/users", response_model=schemas.User)
 def create_user(user: schemas.User, db: Session = Depends(get_db)):
