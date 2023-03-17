@@ -27,6 +27,22 @@ class User(BaseModel):
         orm_mode = True
 
 
+class Client(BaseModel):
+
+    id: Optional[int]
+    first_name: str
+    last_name: str
+    address: str
+    city: str
+    state: str
+    country: str
+    phone: str
+    email: str
+
+    class Config:
+        orm_mode = True
+
+
 class UserLogin(BaseModel):
 
     email: str

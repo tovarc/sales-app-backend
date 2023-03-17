@@ -4,6 +4,11 @@ from . import models, schemas
 from utils import utils
 
 
+def get_users(db: Session):
+
+    return db.query(models.Users).all()
+
+
 def get_all_products(db: Session):
 
     return db.query(models.Products).order_by(models.Products.name).all()
@@ -140,3 +145,87 @@ def login(user: schemas.UserLogin, db: Session):
 
     else:
         raise HTTPException(status_code=404, detail="Invalid Credentials")
+
+
+def create_client(client: schemas.Client, db: Session):
+
+    check_client = (
+        db.query(models.Clients).filter(models.Clients.email == client.email).first()
+    )
+
+    if check_client:
+        raise HTTPException(status_code=409, detail="Email has already registered")
+
+    else:
+        new_client = models.Clients(
+            first_name=client.first_name,
+            last_name=client.last_name,
+            address=client.address,
+            city=client.city,
+            state=client.state,
+            country=client.country,
+            phone=client.phone,
+            email=client.email,
+        )
+
+        db.add(new_client)
+        db.commit()
+        db.refresh(new_client)
+
+        return new_client
+
+
+def get_all_clients(db: Session):
+
+    return db.query(models.Clients).order_by(models.Clients.created_at).all()
+
+
+def delete_client(client_id: int, db: Session):
+
+    product = (
+        db.query(models.Clients)
+        .filter(models.Clients.id == client_id)
+        .delete(synchronize_session="evaluate")
+    )
+
+    db.commit()
+
+    return product
+
+
+def update_client(client: schemas.Client, db: Session):
+
+    updated_client = (
+        db.query(models.Clients)
+        .filter(models.Clients.id == client.id)
+        .update(
+            {
+                "first_name": client.first_name,
+                "last_name": client.last_name,
+                "address": client.address,
+                "city": client.city,
+                "state": client.state,
+                "country": client.country,
+                "phone": client.phone,
+                "email": client.email,
+            },
+            synchronize_session=False,
+        )
+    )
+
+    if updated_client > 0:
+
+        db.commit()
+        db.flush()
+
+        client = (
+            db.query(models.Clients).filter(models.Clients.id == client.id).first()
+        )
+
+        return client
+
+    else:
+
+        raise HTTPException(
+            status_code=409, detail=f"Client with ID: {client.id} doesn't exist."
+        )

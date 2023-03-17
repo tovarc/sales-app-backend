@@ -117,8 +117,65 @@ def create_user(user: schemas.User, db: Session = Depends(get_db)):
     return user
 
 
+# Get users
+@app.get("/users")
+def get_users(db: Session = Depends(get_db)):
+
+    users = crud.get_users(db)
+
+    return users
+
+
 # Login
 @app.post("/login", response_model=schemas.Token)
 def login(user: schemas.UserLogin, db: Session = Depends(get_db)):
 
     return crud.login(user, db)
+
+
+# Create Client
+@app.post("/clients", response_model=schemas.Client)
+def create_client(
+    client: schemas.Client,
+    # user: schemas.User = Depends(utils.get_current_user),
+    db: Session = Depends(get_db),
+):
+
+    return crud.create_client(client, db)
+
+
+# Get All Clients
+@app.get("/clients", response_model=List[schemas.Client])
+def get_all_clients(
+    # user: schemas.User = Depends(utils.get_current_user),
+    db: Session = Depends(get_db),
+):
+
+    clients = crud.get_all_clients(db)
+    return clients
+
+
+# Delete Client
+@app.delete("/clients/{client_id}")
+def delete_product(
+    client_id: int,
+    # user: schemas.User = Depends(utils.get_current_user),
+    db: Session = Depends(get_db),
+):
+
+    client = crud.delete_client(client_id, db)
+
+    return client
+
+
+# Update product
+@app.put("/clients", response_model=schemas.Client)
+def update_products(
+    client: schemas.Client,
+    # user: schemas.User = Depends(utils.get_current_user),
+    db: Session = Depends(get_db),
+):
+
+    updated_client = crud.update_client(client, db)
+
+    return updated_client
