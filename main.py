@@ -157,7 +157,7 @@ def get_all_clients(
 
 # Delete Client
 @app.delete("/clients/{client_id}")
-def delete_product(
+def delete_client(
     client_id: int,
     # user: schemas.User = Depends(utils.get_current_user),
     db: Session = Depends(get_db),
@@ -168,9 +168,9 @@ def delete_product(
     return client
 
 
-# Update product
+# Update Client
 @app.put("/clients", response_model=schemas.Client)
-def update_products(
+def update_clients(
     client: schemas.Client,
     # user: schemas.User = Depends(utils.get_current_user),
     db: Session = Depends(get_db),
