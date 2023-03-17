@@ -137,7 +137,7 @@ def login(user: schemas.UserLogin, db: Session = Depends(get_db)):
 @app.post("/clients", response_model=schemas.Client)
 def create_client(
     client: schemas.Client,
-    # user: schemas.User = Depends(utils.get_current_user),
+    user: schemas.User = Depends(utils.get_current_user),
     db: Session = Depends(get_db),
 ):
 
@@ -147,7 +147,7 @@ def create_client(
 # Get All Clients
 @app.get("/clients", response_model=List[schemas.Client])
 def get_all_clients(
-    # user: schemas.User = Depends(utils.get_current_user),
+    user: schemas.User = Depends(utils.get_current_user),
     db: Session = Depends(get_db),
 ):
 
@@ -159,7 +159,7 @@ def get_all_clients(
 @app.delete("/clients/{client_id}")
 def delete_client(
     client_id: int,
-    # user: schemas.User = Depends(utils.get_current_user),
+    user: schemas.User = Depends(utils.get_current_user),
     db: Session = Depends(get_db),
 ):
 
@@ -172,7 +172,7 @@ def delete_client(
 @app.put("/clients", response_model=schemas.Client)
 def update_clients(
     client: schemas.Client,
-    # user: schemas.User = Depends(utils.get_current_user),
+    user: schemas.User = Depends(utils.get_current_user),
     db: Session = Depends(get_db),
 ):
 
