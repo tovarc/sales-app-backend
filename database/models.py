@@ -58,6 +58,8 @@ class Sales(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
+    items = relationship("SalesItems", back_populates="sale")
+
     client_id = Column(Integer, ForeignKey("clients.id"))
     client = relationship("Clients")
 
@@ -73,4 +75,7 @@ class SalesItems(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     sale_id = Column(Integer, ForeignKey("sales.id"))
-    sale = relationship("Sales")
+    sale = relationship("Sales", back_populates="items")
+
+    product_id = Column(Integer, ForeignKey("products.id"))
+    product = relationship("Products")

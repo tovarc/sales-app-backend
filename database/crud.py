@@ -2,6 +2,7 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from . import models, schemas
 from utils import utils
+from sqlalchemy import func
 
 
 def get_users(db: Session):
@@ -218,9 +219,7 @@ def update_client(client: schemas.Client, db: Session):
         db.commit()
         db.flush()
 
-        client = (
-            db.query(models.Clients).filter(models.Clients.id == client.id).first()
-        )
+        client = db.query(models.Clients).filter(models.Clients.id == client.id).first()
 
         return client
 
@@ -229,3 +228,119 @@ def update_client(client: schemas.Client, db: Session):
         raise HTTPException(
             status_code=409, detail=f"Client with ID: {client.id} doesn't exist."
         )
+
+
+def create_sale(sale: schemas.CreateSale, user: schemas.User, db: Session):
+
+    out_of_stock_proucts = []
+    in_stock_products = []
+
+    for item in sale.products:
+        db_product = (
+            db.query(models.Products).filter(models.Products.id == item.id).first()
+        )
+
+        if db_product.stock < item.quantity and db_product.active == True:
+            out_of_stock_proucts.append(
+                {
+                    "sku": db_product.sku,
+                    "name": db_product.name,
+                    "error": "Product does not have enough stock available",
+                }
+            )
+
+        if db_product.stock < item.quantity and db_product.active == False:
+            out_of_stock_proucts.append(
+                {
+                    "sku": db_product.sku,
+                    "name": db_product.name,
+                    "error": "Product is inactive and does not have enough stock available",
+                }
+            )
+
+        if db_product.stock >= item.quantity and db_product.active == False:
+            out_of_stock_proucts.append(
+                {
+                    "sku": db_product.sku,
+                    "name": db_product.name,
+                    "error": "Product is inactive for sale",
+                }
+            )
+
+        if db_product.stock >= item.quantity and db_product.active == True:
+            in_stock_products.append({**db_product.__dict__, "sold": item.quantity})
+
+    if len(out_of_stock_proucts) > 0:
+
+        raise HTTPException(
+            status_code=400,
+            detail=out_of_stock_proucts,
+        )
+
+    else:
+
+        new_sale = models.Sales(client_id=sale.client_id, total=0)
+
+        db.add(new_sale)
+        db.commit()
+
+        sale_total = 0
+
+        for product in in_stock_products:
+
+            sale_total = sale_total + (product["price"] * product["sold"])
+
+            sale_item = models.SalesItems(
+                price=product["price"],
+                quantity=product["sold"],
+                product_id=product["id"],
+                sale_id=new_sale.id,
+            )
+
+            db.add(sale_item)
+
+            db.query(models.Products).filter(
+                models.Products.id == product["id"]
+            ).update(
+                {
+                    "stock": product["stock"] - product["sold"],
+                }
+            )
+
+            db.commit()
+
+        # Get sum from all sales items
+
+        db.query(models.Sales).filter(models.Sales.id == new_sale.id).update(
+            {"total": sale_total}
+        )
+
+        db.commit()
+
+    return new_sale
+
+
+def get_all_sales(user: schemas.User, db: Session):
+
+    sales = db.query(models.Sales).all()
+
+    result = []
+
+    for sale in sales:
+        result.append({**sale.__dict__, "client": sale.client, "items": sale.items})
+
+    return result
+
+
+def get_sale_by_id(sale_id: int, user: schemas.User, db: Session):
+
+    sale = db.query(models.Sales).filter_by(id=sale_id).first()
+
+    if not sale:
+        raise HTTPException(
+            status_code=404, detail=f"Sale with ID: {sale_id} does not exist"
+        )
+
+    else:
+
+        return {**sale.__dict__, "client": sale.client, "items": sale.items}
