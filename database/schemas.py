@@ -40,7 +40,7 @@ class ClientResponse(BaseModel):
     phone: str
     email: str
     created_at: datetime.datetime
-    updated_at: datetime.datetime
+    updated_at: Optional[datetime.datetime]
 
     class Config:
         orm_mode = True
