@@ -4,6 +4,7 @@ from sqlalchemy.orm import sessionmaker
 import os
 
 DATABASE_URL = "postgresql://postgres:temporal123@sales-app.ceiahbbslvkq.us-east-2.rds.amazonaws.com:5432/postgres"
+
 # DATABASE_URL = "postgresql://postgres:temporal123@localhost/inventory_app"
 # DATABASE_URL = os.getenv("DATABASE_URL")
 
