@@ -4,7 +4,8 @@ from sqlalchemy.orm import Session
 
 from database import crud, models, schemas
 from database.db import SessionLocal, engine
-from routers import clients, products, sales
+from routers import clients, products, sales, quick_sales
+from utils import utils
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -38,6 +39,13 @@ app.include_router(
     tags=["Sales"],
 )
 
+app.include_router(
+    quick_sales.router,
+    prefix="/quick-sales",
+    tags=["Quick Sales"],
+)
+
+
 # Dependency
 def get_db():
     db = SessionLocal()
@@ -70,3 +78,16 @@ def get_users(db: Session = Depends(get_db)):
 def login(user: schemas.UserLogin, db: Session = Depends(get_db)):
 
     return crud.login(user, db)
+
+
+# Login
+@app.post("/auth", response_model=bool)
+def auth(
+    user: schemas.User = (Depends(utils.get_current_user)),
+    db: Session = Depends(get_db),
+):
+
+    if user:
+        return True
+    else:
+        return False

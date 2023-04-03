@@ -79,3 +79,30 @@ class SalesItems(Base):
 
     product_id = Column(Integer, ForeignKey("products.id"))
     product = relationship("Products")
+
+
+class QuickSales(Base):
+
+    __tablename__ = "quick_sales"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    name = Column(String)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    items = relationship("QuickSalesItems", back_populates="quick_sale")
+
+
+class QuickSalesItems(Base):
+
+    __tablename__ = "quick_sales_items"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    quick_sale_id = Column(Integer, ForeignKey("quick_sales.id"))
+    quick_sale = relationship("QuickSales", back_populates="items")
+
+    product_id = Column(Integer, ForeignKey("products.id"))
+    product = relationship("Products")

@@ -139,3 +139,33 @@ class AllSalesResponse(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class CreateQuickSale(BaseModel):
+
+    name: str
+    products: List[int]
+
+    class Config:
+        orm_mode = True
+
+
+class QuickSaleResponse(BaseModel):
+
+    id: int
+    name: str
+    created_at: datetime.datetime
+
+    class Config:
+        orm_mode = True
+
+
+class SingleQuickSaleResponse(BaseModel):
+
+    id: int
+    name: str
+    created_at: datetime.datetime
+    items: List[Product]
+
+    class Config:
+        orm_mode = True

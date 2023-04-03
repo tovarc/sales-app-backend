@@ -344,3 +344,80 @@ def get_sale_by_id(sale_id: int, user: schemas.User, db: Session):
     else:
 
         return {**sale.__dict__, "client": sale.client, "items": sale.items}
+
+
+def create_quick_sale(
+    quick_sale: schemas.CreateQuickSale, user: schemas.User, db: Session
+):
+
+    new_quick_sale = models.QuickSales(name=quick_sale.name)
+
+    db.add(new_quick_sale)
+    db.commit()
+
+    for product_id in quick_sale.products:
+
+        db_product = (
+            db.query(models.Products).filter(models.Products.id == product_id).first()
+        )
+
+        if db_product:
+            new_quick_sale_item = models.QuickSalesItems(
+                quick_sale_id=new_quick_sale.id, product_id=db_product.id
+            )
+            db.add(new_quick_sale_item)
+            db.commit()
+
+    return new_quick_sale
+
+
+def get_quick_sale_by_id(quick_sale_id: int, user: schemas.User, db: Session):
+
+    quick_sale = (
+        db.query(models.QuickSalesItems)
+        .join(
+            models.QuickSales,
+            models.QuickSalesItems.quick_sale_id == quick_sale_id,
+        )
+        .all()
+    )
+
+    if not quick_sale:
+        raise HTTPException(
+            status_code=404, detail=f"Sale with ID: {quick_sale_id} does not exist"
+        )
+
+    else:
+
+        products = []
+
+        for sale in quick_sale:
+
+            products.append(sale.product)
+
+        return {**quick_sale[0].quick_sale.__dict__, "products": products}
+
+
+def get_all_quick_sale(user: schemas.User, db: Session):
+
+    quick_sales_all = db.query(models.QuickSales).all()
+
+    result = []
+
+    for quick_sale in quick_sales_all:
+
+        quick_sales_items = (
+            db.query(models.QuickSalesItems)
+            .filter_by(quick_sale_id=quick_sale.id)
+            .all()
+        )
+
+        products = []
+
+        for item in quick_sales_items:
+
+            products.append(item.product)
+
+        result.append({**quick_sale.__dict__, "products": products})
+
+    return result
