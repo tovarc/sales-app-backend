@@ -67,7 +67,8 @@ def update_product(product: schemas.Product, db: Session):
         db.flush()
 
         product = (
-            db.query(models.Products).filter(models.Products.id == product.id).first()
+            db.query(models.Products).filter(
+                models.Products.id == product.id).first()
         )
 
         return product
@@ -100,7 +101,8 @@ def update_status_product(product_id: int, status: bool, db: Session):
         db.flush()
 
         product = (
-            db.query(models.Products).filter(models.Products.id == product_id).first()
+            db.query(models.Products).filter(
+                models.Products.id == product_id).first()
         )
 
         return product
@@ -114,10 +116,12 @@ def update_status_product(product_id: int, status: bool, db: Session):
 
 def create_user(user: schemas.User, db: Session):
 
-    check_user = db.query(models.Users).filter(models.Users.email == user.email).first()
+    check_user = db.query(models.Users).filter(
+        models.Users.email == user.email).first()
 
     if check_user:
-        raise HTTPException(status_code=409, detail="Email has already registered")
+        raise HTTPException(
+            status_code=409, detail="Email has already registered")
 
     else:
         new_user = models.Users(
@@ -136,7 +140,8 @@ def create_user(user: schemas.User, db: Session):
 
 def login(user: schemas.UserLogin, db: Session):
 
-    db_user = db.query(models.Users).filter(models.Users.email == user.email).first()
+    db_user = db.query(models.Users).filter(
+        models.Users.email == user.email).first()
 
     verified_password = utils.verify_password(user.password, db_user.password)
 
@@ -151,11 +156,13 @@ def login(user: schemas.UserLogin, db: Session):
 def create_client(client: schemas.Client, db: Session):
 
     check_client = (
-        db.query(models.Clients).filter(models.Clients.email == client.email).first()
+        db.query(models.Clients).filter(
+            models.Clients.email == client.email).first()
     )
 
     if check_client:
-        raise HTTPException(status_code=409, detail="Email has already registered")
+        raise HTTPException(
+            status_code=409, detail="Email has already registered")
 
     else:
         new_client = models.Clients(
@@ -183,7 +190,7 @@ def get_all_clients(db: Session):
 
 def delete_client(client_id: int, db: Session):
 
-    product = (
+    client = (
         db.query(models.Clients)
         .filter(models.Clients.id == client_id)
         .delete(synchronize_session="evaluate")
@@ -191,7 +198,7 @@ def delete_client(client_id: int, db: Session):
 
     db.commit()
 
-    return product
+    return client
 
 
 def update_client(client: schemas.Client, db: Session):
@@ -219,7 +226,8 @@ def update_client(client: schemas.Client, db: Session):
         db.commit()
         db.flush()
 
-        client = db.query(models.Clients).filter(models.Clients.id == client.id).first()
+        client = db.query(models.Clients).filter(
+            models.Clients.id == client.id).first()
 
         return client
 
@@ -237,7 +245,8 @@ def create_sale(sale: schemas.CreateSale, user: schemas.User, db: Session):
 
     for item in sale.products:
         db_product = (
-            db.query(models.Products).filter(models.Products.id == item.id).first()
+            db.query(models.Products).filter(
+                models.Products.id == item.id).first()
         )
 
         if db_product.stock < item.quantity and db_product.active == True:
@@ -268,7 +277,8 @@ def create_sale(sale: schemas.CreateSale, user: schemas.User, db: Session):
             )
 
         if db_product.stock >= item.quantity and db_product.active == True:
-            in_stock_products.append({**db_product.__dict__, "sold": item.quantity})
+            in_stock_products.append(
+                {**db_product.__dict__, "sold": item.quantity})
 
     if len(out_of_stock_proucts) > 0:
 
@@ -327,7 +337,8 @@ def get_all_sales(user: schemas.User, db: Session):
     result = []
 
     for sale in sales:
-        result.append({**sale.__dict__, "client": sale.client, "items": sale.items})
+        result.append(
+            {**sale.__dict__, "client": sale.client, "items": sale.items})
 
     return result
 
@@ -358,7 +369,8 @@ def create_quick_sale(
     for product_id in quick_sale.products:
 
         db_product = (
-            db.query(models.Products).filter(models.Products.id == product_id).first()
+            db.query(models.Products).filter(
+                models.Products.id == product_id).first()
         )
 
         if db_product:
@@ -421,3 +433,145 @@ def get_all_quick_sale(user: schemas.User, db: Session):
         result.append({**quick_sale.__dict__, "products": products})
 
     return result
+
+
+def update_quick_sale(quick_sale: schemas.UpdateQuickSale, user: schemas.User, db: Session):
+
+    if quick_sale.name:
+
+        updated_quick_sale = (
+            db.query(models.QuickSales)
+            .filter(models.QuickSales.id == quick_sale.id)
+            .update(
+                {
+                    "name": quick_sale.name,
+                },
+                synchronize_session=False,
+            )
+        )
+        db.commit()
+
+    quick_sale_items = (
+        db.query(models.QuickSalesItems).filter(
+            models.QuickSalesItems.quick_sale_id == quick_sale.id).all()
+    )
+
+    if quick_sale_items:
+
+        for sale_item in quick_sale_items:
+
+            if sale_item.product_id not in quick_sale.products:
+
+                db.query(models.QuickSalesItems).filter_by(
+                    id=sale_item.id).delete(synchronize_session="evaluate")
+
+                db.commit()
+
+        quick_sale_items_refresh_1 = (
+            db.query(models.QuickSalesItems).filter(
+                models.QuickSalesItems.quick_sale_id == quick_sale.id).all()
+        )
+
+        if quick_sale_items_refresh_1:
+
+            items_refreshed = []
+
+            for item in quick_sale_items_refresh_1:
+
+                items_refreshed.append(item.product_id)
+
+            for new_item in quick_sale.products:
+
+                if new_item not in items_refreshed:
+                    new_quick_sale_item = models.QuickSalesItems(
+                        quick_sale_id=quick_sale.id, product_id=new_item
+                    )
+                    db.add(new_quick_sale_item)
+                    db.commit()
+        else:
+
+            for product_id in quick_sale.products:
+                new_quick_sale_item = models.QuickSalesItems(
+                    quick_sale_id=quick_sale.id, product_id=product_id
+                )
+                db.add(new_quick_sale_item)
+                db.commit()
+
+    else:
+
+        for product_id in quick_sale.products:
+            new_quick_sale_item = models.QuickSalesItems(
+                quick_sale_id=quick_sale.id, product_id=product_id
+            )
+            db.add(new_quick_sale_item)
+            db.commit()
+
+    quick_sale_items_refresh = (
+        db.query(models.QuickSalesItems).filter(
+            models.QuickSalesItems.quick_sale_id == quick_sale.id).all()
+    )
+
+    quick_sale = (
+        db.query(models.QuickSalesItems)
+        .join(
+            models.QuickSales,
+            models.QuickSalesItems.quick_sale_id == quick_sale.id,
+        )
+        .all()
+    )
+
+    if not quick_sale:
+        raise HTTPException(
+            status_code=404, detail=f"Sale with ID: {quick_sale.id} does not exist"
+        )
+
+    else:
+
+        products = []
+
+        for sale in quick_sale:
+
+            products.append(sale.product)
+
+        return {**quick_sale[0].quick_sale.__dict__, "products": products}
+
+
+def delete_quick_sale(quick_sale_id: int, db: Session):
+
+    db_quick_sale = (
+        db.query(models.QuickSales)
+        .filter(models.QuickSales.id == quick_sale_id)
+        .first()
+    )
+
+    if not db_quick_sale:
+        raise HTTPException(
+            status_code=404, detail=f"Sale with ID: {quick_sale_id} does not exist"
+        )
+
+    else:
+
+        quick_sale_items = (
+            db.query(models.QuickSalesItems).filter(
+                models.QuickSalesItems.quick_sale_id == quick_sale_id).all()
+        )
+
+        if quick_sale_items:
+
+            for sale_item in quick_sale_items:
+                db.query(models.QuickSalesItems).filter_by(
+                    id=sale_item.id).delete(synchronize_session="evaluate")
+
+                db.commit()
+
+        quick_sale = (
+            db.query(models.QuickSales)
+            .filter(models.QuickSales.id == quick_sale_id)
+            .delete(synchronize_session="evaluate")
+        )
+
+        db.commit()
+
+        return HTTPException(
+            status_code=200, detail=f"Sale with ID: {quick_sale_id} has been deleted."
+        )

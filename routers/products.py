@@ -19,6 +19,7 @@ def get_db():
 
 router = APIRouter()
 
+
 # Get all products
 @router.get("", response_model=List[schemas.Product])
 def get_products(

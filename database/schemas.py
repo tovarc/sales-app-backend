@@ -169,3 +169,12 @@ class SingleQuickSaleResponse(BaseModel):
 
     class Config:
         orm_mode = True
+
+class UpdateQuickSale(BaseModel):
+
+    id: int
+    name: str
+    products: List[int]
+
+    class Config:
+        orm_mode = True

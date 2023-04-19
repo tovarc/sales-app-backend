@@ -46,7 +46,8 @@ def get_all_sales(
 
 
 # Get sale by ID
-@router.get("/{sale_id}", response_model=schemas.SingleSaleResponse)
+# response_model=schemas.SingleSaleResponse
+@router.get("/{sale_id}")
 def get_sale_by_id(
     sale_id: int,
     user: schemas.User = Depends(utils.get_current_user),

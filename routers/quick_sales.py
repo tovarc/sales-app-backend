@@ -56,3 +56,29 @@ def get_quick_sale_by_id(
     quick_sale = crud.get_quick_sale_by_id(quick_sale_id, user, db)
 
     return quick_sale
+
+
+# Update Quick Sale by ID
+@router.put("")
+def update_quick_sale(
+    quick_sale: schemas.UpdateQuickSale,
+    user: schemas.User = Depends(utils.get_current_user),
+    db: Session = Depends(get_db),
+):
+
+    quick_sale = crud.update_quick_sale(quick_sale, user, db)
+
+    return quick_sale
+
+
+# Delete Quick Sale by ID
+@router.delete("/{quick_sale_id}")
+def delete_quick_sale(
+    quick_sale_id: int,
+    user: schemas.User = Depends(utils.get_current_user),
+    db: Session = Depends(get_db),
+):
+
+    quick_sale = crud.delete_quick_sale(quick_sale_id, db)
+
+    return quick_sale
