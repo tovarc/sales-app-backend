@@ -1,8 +1,10 @@
-from fastapi import HTTPException
+from fastapi import HTTPException, UploadFile
 from sqlalchemy.orm import Session
 from . import models, schemas
 from utils import utils
 from sqlalchemy import func
+import csv
+import codecs
 
 
 def get_users(db: Session):
@@ -575,3 +577,69 @@ def delete_quick_sale(quick_sale_id: int, db: Session):
         return HTTPException(
             status_code=200, detail=f"Sale with ID: {quick_sale_id} has been deleted."
         )
+
+
+def import_clients(file: UploadFile, db: Session):
+
+    csv_clients = list(csv.DictReader(
+        codecs.iterdecode(file.file, 'utf-8')))
+
+    skipped_clients: int = 0
+    imported_clients: int = 0
+
+    for client in csv_clients:
+
+        check_client = db.query(models.Clients).filter(
+                models.Clients.email == client['email']).first()
+
+        if check_client:
+            skipped_clients += 1
+
+        else:
+            new_client = models.Clients(
+                first_name=client['first_name'],
+                last_name=client['last_name'],
+                address=client['address'],
+                city=client['city'],
+                state=client['state'],
+                country=client['country'],
+                phone=client['phone'],
+                email=client['email']
+            )
+
+            db.add(new_client)
+            db.commit()
+            db.refresh(new_client)
+
+            imported_clients += 1
+
+    return {'Skipped Clients': skipped_clients, 'Imported Clients': imported_clients}
+
+
+def import_products(file: UploadFile, db: Session):
+
+    csv_products = list(csv.DictReader(
+        codecs.iterdecode(file.file, 'utf-8')))
+
+    skipped_products: int = 0
+    imported_products: int = 0
+
+    for product in csv_products:
+
+        check_product = db.query(models.Products).filter(
+                models.Products.sku == product['sku']).first()
+
+        if check_product:
+            skipped_products += 1
+
+        else:
+            product = models.Products(
+             name=product['name'], price=product['price'], sku=product['sku'], stock=product['stock'])
+
+            db.add(product)
+            db.commit()
+            db.refresh(product)
+            
+            imported_products += 1
+
+    return {'Skipped Products': skipped_products, 'Imported Products': imported_products}

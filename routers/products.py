@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, UploadFile
 from sqlalchemy.orm import Session
 
 from database import crud, schemas
@@ -95,3 +95,14 @@ def delete_product(
     product = crud.delete_product(product_id, db)
 
     return product
+
+
+# Imports Clients
+@router.post("/import")
+def import_products(
+    csv: UploadFile,
+    user: schemas.User = Depends(utils.get_current_user),
+    db: Session = Depends(get_db),
+):
+
+    return crud.import_products(csv, db)

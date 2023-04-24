@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, UploadFile
 from sqlalchemy.orm import Session
 
 from database import crud, schemas
@@ -66,3 +66,14 @@ def update_clients(
     updated_client = crud.update_client(client, db)
 
     return updated_client
+
+
+# Imports Clients
+@router.post("/import")
+def import_clients(
+    csv: UploadFile,
+    user: schemas.User = Depends(utils.get_current_user),
+    db: Session = Depends(get_db),
+):
+
+    return crud.import_clients(csv, db)
